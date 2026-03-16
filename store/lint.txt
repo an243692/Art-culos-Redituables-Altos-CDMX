@@ -1,0 +1,12 @@
+﻿
+C:\Users\Victor Andre\Desktop\altos articulos sistema\store\src\app\page.tsx
+  27:99  error  Parsing error: Type expected
+
+C:\Users\Victor Andre\Desktop\altos articulos sistema\store\src\components\HeroDynamic.tsx
+  29:9  warning  'slide' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Victor Andre\Desktop\altos articulos sistema\store\src\components\ProductCard.tsx
+  36:9  warning  'handleAdd' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 3 problems (1 error, 2 warnings)
+

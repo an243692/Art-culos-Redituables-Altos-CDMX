@@ -1,0 +1,23 @@
+﻿
+C:\Users\Victor Andre\Desktop\altos articulos sistema\store\src\app\page.tsx
+    3:51  warning  'useRef' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+    3:68  warning  'memo' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+    9:25  warning  'ChevronLeft' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+    9:38  warning  'ChevronRight' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   10:51  warning  'Check' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   18:10  warning  'AuthModal' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  107:19  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  123:14  warning  'err' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+  123:19  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  219:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  224:7   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  251:18  warning  'e' is defined but never used                                                                                        @typescript-eslint/no-unused-vars
+  270:9   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  317:11  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  332:28  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  336:33  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  337:12  error    Unexpected var, use let or const instead                                                                             no-var
+
+Ô£û 17 problems (9 errors, 8 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
