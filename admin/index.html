@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Altos Artículos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Scrollbar Minimalista y Elegante */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        #sidebar {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #000000;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            text-transform: capitalize;
+            letter-spacing: 0.02em;
+            border-radius: 12px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-item.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            border-left: 3px solid #ffffff;
+        }
+
+        .sidebar-item:not(.active):hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        /* Glassmorphism Cards */
+        .stat-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-black {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-black:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+        }
+
+        .table-header {
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+
+        .modal-box {
+            border-radius: 24px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
+        }
+
+        .toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 16px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            top: 24px;
+            opacity: 1;
+        }
+
+        input:not([type=color]):not([type=range]),
+        select,
+        textarea {
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            transition: all 0.3s ease !important;
+            background: #f8fafc !important;
+        }
+
+        input[type=color] { padding: 0 !important; border: none !important; background: transparent !important; }
+        input[type=range] { padding: 0 !important; border: none !important; background: transparent !important; }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            background: #ffffff !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+            outline: none !important;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <div class="flex h-screen overflow-hidden relative">
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()"
+            class="fixed inset-0 bg-[#0d1b2a]/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0 duration-300">
+        </div>
+
+        <!-- ── SIDEBAR ──────────────────────────────────────────────────── -->
+        <aside id="sidebar"
+            class="w-72 bg-black flex-shrink-0 flex flex-col h-full fixed md:relative z-50 transform -translate-x-full md:translate-x-0 border-r border-white/5">
+            <div class="px-8 py-12 flex flex-col items-center border-b border-white/5">
+                <div class="h-20 w-20 bg-white p-2 rounded-xl mb-6 flex items-center justify-center">
+                    <img id="adminSidebarLogo" src="../store/public/media__1773555188977.png" alt="Altos Logo" class="h-full w-full object-contain"
+                        onerror="this.src='../logo articulos redituables altos.jpg'">
+                </div>
+                <h1 class="text-[10px] font-black tracking-[0.4em] uppercase text-white text-center italic">Altos
+                    Artículos</h1>
+                <p class="text-[8px] font-bold tracking-[0.2em] text-gray-500 uppercase mt-2 text-center">Sistema de Inventario y Gestión</p>
+            </div>
+            <nav class="flex-1 px-4 py-8 space-y-1 overflow-y-auto">
+                <button onclick="switchTab('productos')" class="sidebar-item w-full active" id="btn-tab-productos">
+                    <i class="fas fa-box w-4"></i> Productos
+                </button>
+                <button onclick="switchTab('pedidos')" class="sidebar-item w-full" id="btn-tab-pedidos">
+                    <i class="fas fa-shopping-bag w-4"></i> Pedidos
+                </button>
+                <button onclick="switchTab('secciones')" class="sidebar-item w-full" id="btn-tab-secciones">
+                    <i class="fas fa-layer-group w-4"></i> Secciones
+                </button>
+                <button onclick="switchTab('clientes')" class="sidebar-item w-full" id="btn-tab-clientes">
+                    <i class="fas fa-users w-4"></i> Clientes
+                </button>
+                <button onclick="switchTab('branding')" class="sidebar-item w-full" id="btn-tab-branding">
+                    <i class="fas fa-palette w-4"></i> Branding
+                </button>
+                <button onclick="switchTab('carrusel')" class="sidebar-item w-full" id="btn-tab-carrusel">
+                    <i class="fas fa-images w-4"></i> Carrusel Hero
+                </button>
+                <button onclick="switchTab('bodysection')" class="sidebar-item w-full" id="btn-tab-bodysection">
+                    <i class="fas fa-image w-4"></i> Imágenes Body Section
+                </button>
+                <button onclick="switchTab('prefooter')" class="sidebar-item w-full" id="btn-tab-prefooter">
+                    <i class="fas fa-layer-group w-4"></i> Images Before Footer
+                </button>
+                <button onclick="switchTab('editor-visual')" class="sidebar-item w-full !text-[#E91E63] hover:!bg-[#E91E63]/10" id="btn-tab-editor-visual">
+                    <i class="fas fa-paint-roller w-4"></i> Editor Visual (Live)
+                </button>
+                <button onclick="switchTab('config')" class="sidebar-item w-full" id="btn-tab-config">
+                    <i class="fas fa-cog w-4"></i> Configuración
+                </button>
+            </nav>
+            <div
+                class="p-8 border-t border-white/5 text-[9px] font-black text-white/40 tracking-widest uppercase text-center">
+                FASE BETA 2026
+            </div>
+        </aside>
+
+        <!-- ── MAIN ─────────────────────────────────────────────────────── -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+
+            <!-- Top Bar -->
+            <header
+                class="h-24 bg-black flex items-center justify-between px-8 md:px-12 flex-shrink-0 border-b border-white/5">
+                <div class="flex items-center gap-6">
+                    <button onclick="toggleSidebar()"
+                        class="md:hidden text-white hover:text-gray-400 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-sm font-black text-white uppercase tracking-[0.3em]">
+                        Overview</h2>
+                </div>
+                <div class="flex items-center gap-8">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-[9px] font-black text-gray-300 uppercase tracking-widest">Network Status</p>
+                        <p id="cloudinaryBadge" class="text-[10px] text-green-500 font-black uppercase">Online · Secure
+                        </p>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=000&color=fff&bold=true"
+                        class="h-12 w-12 grayscale border border-gray-100">
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 w-full max-w-[100vw]">
+
+                <!-- ══ TAB: PRODUCTOS ══════════════════════════════════════ -->
+                <div id="tab-productos" class="tab-content active space-y-5">
+
+                    <!-- ══ STATS ROW ══════════════════════════════════════════ -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <!-- Total Artículos -->
+                        <div class="bg-black text-white rounded-2xl px-6 py-5 flex items-center gap-4">
+                            <div
+                                class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-box text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-white/50">Artículos</p>
+                                <h3 id="dashTotal" class="text-3xl font-black leading-none mt-1">—</h3>
+                            </div>
+                        </div>
+                        <!-- Pedidos -->
+                        <div class="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-4">
+                            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-shopping-bag text-sm text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Pedidos</p>
+                                <h3 id="dashOrders" class="text-3xl font-black text-black leading-none mt-1">—</h3>
+                            </div>
+                        </div>
+                        <!-- Clientes -->
+                        <div class="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-4">
+                            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-users text-sm text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Clientes</p>
+                                <h3 id="dashClients" class="text-3xl font-black text-black leading-none mt-1">—</h3>
+                            </div>
+                        </div>
+                        <!-- Categorías -->
+                        <div class="bg-white border border-gray-200 rounded-2xl px-6 py-5 flex items-center gap-4">
+                            <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-tags text-sm text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Categorías</p>
+                                <h3 id="dashCats" class="text-3xl font-black text-black leading-none mt-1">—</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="flex flex-col sm:flex-row gap-3 justify-between">
+                        <div class="relative w-full sm:w-auto">
+                            <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="Buscar productos..."
+                                class="bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#00b4d8] w-full sm:w-72 font-semibold">
+                        </div>
+                        <button onclick="openProductModal()" class="btn-black">
+                            <i class="fas fa-plus"></i> AGREGAR ARTÍCULO
+                        </button>
+                    </div>
+
+                    <!-- Contenedor general para las pilas horizontales (Acordeones por categoría) -->
+                    <div id="productsCategoriesContainer" class="space-y-4">
+                        <div class="py-12 text-center text-gray-400">
+                            <i class="fas fa-spinner fa-spin text-2xl text-[#00b4d8]"></i>
+                            <p class="mt-2 text-xs font-semibold uppercase tracking-widest text-[#00b4d8]">Cargando catálogo...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: PEDIDOS ══════════════════════════════════════ -->
+                <div id="tab-pedidos" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-[#0a0a0a] uppercase tracking-tight">Gestión de Pedidos</h3>
+                            <p class="text-sm text-gray-400 mt-0.5">Controla y cambia el estado de los pedidos realizados por tus clientes</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="table-header">
+                                    <tr>
+                                        <th class="px-8 py-4">ID / Fecha</th>
+                                        <th class="px-8 py-4">Cliente</th>
+                                        <th class="px-8 py-4">Artículos</th>
+                                        <th class="px-8 py-4">Total</th>
+                                        <th class="px-8 py-4">Estado</th>
+                                        <th class="px-8 py-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody" class="divide-y divide-gray-50">
+                                    <tr>
+                                        <td colspan="6" class="px-5 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl text-[#00b4d8]"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: CLIENTES ══════════════════════════════════════ -->
+                <div id="tab-clientes" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-[#0a0a0a] uppercase tracking-tight">Directorio de Clientes</h3>
+                            <p class="text-sm text-gray-400 mt-0.5">Total de clientes: <span id="clientCount" class="font-bold text-black">0</span></p>
+                        </div>
+                        <div class="relative w-full sm:w-auto">
+                            <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                            <input type="text" id="clientSearch" placeholder="Buscar clientes..." oninput="filterClients()"
+                                class="bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#00b4d8] w-full sm:w-72 font-semibold">
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="table-header">
+                                    <tr>
+                                        <th class="px-6 py-4">Cliente</th>
+                                        <th class="px-6 py-4">Email</th>
+                                        <th class="px-6 py-4">Registro / Auth</th>
+                                        <th class="px-6 py-4">Último Acceso</th>
+                                        <th class="px-6 py-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientsTableBody" class="divide-y divide-gray-50">
+                                    <tr>
+                                        <td colspan="5" class="px-5 py-12 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl text-[#00b4d8]"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: SECCIONES ══════════════════════════════════════ -->
+                <div id="tab-secciones" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-[#0a0a0a] uppercase tracking-tight">Secciones del
+                                Catálogo</h3>
+                            <p class="text-sm text-gray-400 mt-0.5">Activa o desactiva las secciones que aparecen en la
+                                tienda. Asigna productos a cada sección al editarlos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Info banner -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3">
+                        <div
+                            class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 text-sm">
+                            <i class="fas fa-info"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-indigo-700">¿Cómo funciona?</p>
+                            <p class="text-xs text-indigo-500 mt-0.5">Activa las secciones visibles en la tienda con el
+                                toggle. Para asignar productos a una sección, edita el producto y selecciona sus
+                                secciones en el formulario.</p>
+                        </div>
+                    </div>
+
+                    <div id="seccionesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="col-span-full text-center py-10 text-gray-300"><i
+                                class="fas fa-spinner fa-spin text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: CARRUSEL ══════════════════════════════════════ -->
+                <div id="tab-carrusel" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-black text-[#0d1b2a] uppercase tracking-tight">Carrusel Hero</h3>
+                            <p class="text-sm text-gray-500 mt-0.5">Banners de imagen completa con texto y botón overlay</p>
+                        </div>
+                        <button onclick="openSlideModal()"
+                            class="bg-[#00b4d8] hover:bg-[#0096b4] text-white w-full sm:w-auto justify-center font-black px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 transition shadow-lg shadow-[#00b4d8]/30">
+                            <i class="fas fa-plus"></i> Añadir Slide
+                        </button>
+                    </div>
+
+                    <!-- Info tip: cómo funcionan los banners -->
+                    <div class="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-100 rounded-xl p-4 flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0 text-teal-600">
+                            <i class="fas fa-info-circle text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-teal-700 mb-1">Estilo de imagen completa (como Betterware)</p>
+                            <p class="text-xs text-teal-600 leading-relaxed">Cada slide muestra una <strong>imagen de fondo completa</strong>. El título y subtítulo se superponen sobre la imagen con un degradado. Opcionalmente puedes agregar un botón CTA "Comprar Ahora". Recomendado: imágenes <strong>1280×720px o mayor</strong> en formato JPG/PNG/WebP.</p>
+                        </div>
+                    </div>
+
+                    <div id="slidesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div class="col-span-full text-center py-16 text-gray-400"><i
+                                class="fas fa-spinner fa-spin text-2xl text-[#00b4d8]"></i></div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: CLOUDINARY CONFIG ════════════════════════════ -->
+                <div id="tab-config" class="tab-content max-w-xl">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+                        <div>
+                            <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight mb-1">Configuración
+                                Cloudinary</h3>
+                            <p class="text-sm text-gray-500">Aquí configuras tus credenciales de Cloudinary para que las
+                                imágenes se suban directamente a la nube y se optimicen automáticamente en formato WebP.
+                            </p>
+                        </div>
+
+                        <div
+                            class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-700 font-semibold space-y-1">
+                            <p>① Crea tu cuenta gratuita en <a href="https://cloudinary.com" target="_blank"
+                                    class="underline">cloudinary.com</a></p>
+                            <p>② Ve a <strong>Settings → Upload → Upload Presets</strong> → crea uno de tipo
+                                <strong>Unsigned</strong>
+                            </p>
+                            <p>③ Copia tu <strong>Cloud Name</strong> y el nombre del <strong>Upload Preset</strong></p>
+                            <p>④ Pégalos abajo y guarda</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Cloud
+                                    Name</label>
+                                <input type="text" id="cfgCloudName" placeholder="Ej: mi-cloud-123"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wider">Upload
+                                    Preset (Unsigned)</label>
+                                <input type="text" id="cfgPreset" placeholder="Ej: altos_unsigned"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                            </div>
+                        </div>
+
+                        <button onclick="saveCloudinaryConfig()" class="btn-black w-full justify-center">
+                            <i class="fas fa-save"></i> GUARDAR CONFIGURACIÓN
+                        </button>
+
+                        <div id="testResult"
+                            class="hidden bg-green-50 border border-green-200 text-green-700 font-semibold text-sm rounded-xl p-4 flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i> <span>Configuración guardada
+                                correctamente en este navegador.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: BRANDING ═══════════════════════════════════════ -->
+                <div id="tab-branding" class="tab-content max-w-xl">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+                        <div>
+                            <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight mb-1">Logo de la
+                                Tienda (Principal)</h3>
+                            <p class="text-sm text-gray-500">Sube tu logo principal aquí. Aparece en el header y en el
+                                Hero.
+                            </p>
+                        </div>
+
+                        <!-- Current logo preview -->
+                        <div class="text-center">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Logo principal
+                                actual</p>
+                            <div class="inline-block bg-[#0a0a0a] rounded-2xl p-6">
+                                <img id="currentLogoPreview" src="" alt="Logo actual"
+                                    class="h-24 w-24 object-contain rounded-xl mx-auto"
+                                    onerror="this.src='https://placehold.co/96x96/1a1a1a/333?text=SIN+LOGO'">
+                            </div>
+                            <p id="currentLogoStatus" class="text-xs text-gray-300 mt-2 font-semibold">Cargando...</p>
+                        </div>
+
+                        <!-- Upload zone -->
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">Subir
+                                nuevo logo principal</label>
+                            <div class="upload-zone rounded-xl p-6 text-center" onclick="openCloudinaryWidget('logo')">
+                                <img id="newLogoPreview" src=""
+                                    class="hidden mx-auto mb-3 h-20 object-contain rounded-xl">
+                                <i class="fas fa-cloud-upload-alt text-2xl text-gray-300 mb-2 block"
+                                    id="logoUploadIcon"></i>
+                                <p class="text-sm text-gray-400 font-semibold" id="logoUploadLabel">Haz clic para subir
+                                    el logo principal</p>
+                            </div>
+                            <input type="hidden" id="newLogoUrl">
+                        </div>
+
+                        <hr class="border-gray-100 my-4">
+
+                        <div>
+                            <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight mb-1">Logo Tipográfico
+                                (Secundario)</h3>
+                            <p class="text-sm text-gray-500">Este logo se mostrará solo en el Header, justo al lado del
+                                principal (Opcional).
+                            </p>
+                        </div>
+
+                        <!-- Current logo2 preview -->
+                        <div class="text-center">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Logo secundario
+                                actual</p>
+                            <div class="inline-block bg-[#f5f5f5] border border-gray-200 rounded-2xl p-6">
+                                <img id="currentLogo2Preview" src="" alt="Logo secundario actual"
+                                    class="h-16 w-32 object-contain rounded-xl mx-auto"
+                                    onerror="this.src='https://placehold.co/128x64/f5f5f5/ccc?text=VACIO'">
+                            </div>
+                            <p id="currentLogo2Status" class="text-xs text-gray-300 mt-2 font-semibold">Cargando...</p>
+                        </div>
+
+                        <!-- Upload zone 2 -->
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">Subir
+                                nuevo logo secundario</label>
+                            <div class="upload-zone rounded-xl p-6 text-center" onclick="openCloudinaryWidget('logo2')">
+                                <img id="newLogo2Preview" src=""
+                                    class="hidden mx-auto mb-3 h-16 object-contain rounded-xl">
+                                <i class="fas fa-cloud-upload-alt text-2xl text-gray-300 mb-2 block"
+                                    id="logo2UploadIcon"></i>
+                                <p class="text-sm text-gray-400 font-semibold" id="logo2UploadLabel">Haz clic para subir
+                                    el logo secundario</p>
+                            </div>
+                            <input type="hidden" id="newLogo2Url">
+                        </div>
+
+                        <button onclick="saveLogo()" class="btn-black w-full justify-center">
+                            <i class="fas fa-save"></i> ACTUALIZAR LOGOS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══ TAB: TEMAS ══════════════════════════════════════════ -->
+                <div id="tab-temas" class="tab-content">
+                    <div class="space-y-6 max-w-2xl">
+
+                        <div>
+                            <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight mb-1">Temas de Color
+                            </h3>
+                            <p class="text-sm text-gray-500">Elige un tema preestablecido o personaliza los colores. Los
+                                cambios se aplican en tiempo real en la tienda.</p>
+                        </div>
+
+                        <!-- Preview en vivo -->
+                        <div id="themePreviewBar"
+                            class="rounded-2xl p-5 flex items-center gap-4 shadow-inner transition-all duration-500"
+                            style="background:#0a0a0a">
+                            <div id="themePreviewBtn"
+                                class="px-5 py-2.5 rounded-xl text-white text-xs font-black uppercase tracking-wider transition-all"
+                                style="background:#0a0a0a; border: 2px solid #00b4d8">Vista Previa</div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest" id="themePreviewTitle"
+                                    style="color:#ffffff">Altos Artículos</p>
+                                <p class="text-[10px] mt-0.5" id="themePreviewSub" style="color:rgba(255,255,255,0.4)">
+                                    Catálogo Mayorista</p>
+                            </div>
+                        </div>
+
+                        <!-- Paletas preestablecidas -->
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Temas
+                                Preestablecidos</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="themePresetsGrid">
+
+                                <!-- ★ OFICIAL (Altos Original) -->
+                                <button onclick="applyPreset('official')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-[#0d1b2a] transition relative"
+                                    data-theme="official">
+                                    <div
+                                        class="absolute top-2 right-2 bg-[#0d1b2a] text-white text-[9px] font-black px-2 py-0.5 rounded-full z-10 tracking-wider">
+                                        ★ OFICIAL</div>
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#0a0a0a"></div>
+                                        <div class="flex-1" style="background:#ffffff; border-left:1px solid #eee">
+                                        </div>
+                                        <div class="flex-1" style="background:#f8f8f8"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-[#0d1b2a]">Altos Original</p>
+                                        <p class="text-[10px] text-gray-400">Negro y Blanco · Oficial</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Noche Oscura -->
+                                <button onclick="applyPreset('night')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-gray-400 transition"
+                                    data-theme="night">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#0a0a0a"></div>
+                                        <div class="flex-1" style="background:#00b4d8"></div>
+                                        <div class="flex-1" style="background:#f8f8f8"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Noche Oscura</p>
+                                        <p class="text-[10px] text-gray-400">Negro + Cian</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Royal Blue -->
+                                <button onclick="applyPreset('royal')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-blue-400 transition"
+                                    data-theme="royal">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#1a237e"></div>
+                                        <div class="flex-1" style="background:#ffd600"></div>
+                                        <div class="flex-1" style="background:#e8eaf6"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Royal Blue</p>
+                                        <p class="text-[10px] text-gray-400">Azul + Dorado</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Esmeralda -->
+                                <button onclick="applyPreset('emerald')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-green-400 transition"
+                                    data-theme="emerald">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#064e3b"></div>
+                                        <div class="flex-1" style="background:#34d399"></div>
+                                        <div class="flex-1" style="background:#ecfdf5"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Bosque Verde</p>
+                                        <p class="text-[10px] text-gray-400">Verde + Menta</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Vino -->
+                                <button onclick="applyPreset('wine')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-red-400 transition"
+                                    data-theme="wine">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#4a0010"></div>
+                                        <div class="flex-1" style="background:#f87171"></div>
+                                        <div class="flex-1" style="background:#fff1f2"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Vino Tinto</p>
+                                        <p class="text-[10px] text-gray-400">Bordo + Rosa</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Sol -->
+                                <button onclick="applyPreset('sol')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-amber-400 transition"
+                                    data-theme="sol">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#78350f"></div>
+                                        <div class="flex-1" style="background:#fbbf24"></div>
+                                        <div class="flex-1" style="background:#fffbeb"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Sol del Desierto</p>
+                                        <p class="text-[10px] text-gray-400">Café + Dorado</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Galaxy -->
+                                <button onclick="applyPreset('galaxy')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-purple-400 transition"
+                                    data-theme="galaxy">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#2e1065"></div>
+                                        <div class="flex-1" style="background:#c084fc"></div>
+                                        <div class="flex-1" style="background:#faf5ff"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Galaxia</p>
+                                        <p class="text-[10px] text-gray-400">Morado + Lila</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Coral -->
+                                <button onclick="applyPreset('coral')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-400 transition"
+                                    data-theme="coral">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#9a3412"></div>
+                                        <div class="flex-1" style="background:#fb923c"></div>
+                                        <div class="flex-1" style="background:#fff7ed"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Coral Fuego</p>
+                                        <p class="text-[10px] text-gray-400">Naranja Quemado</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tema: Silver -->
+                                <button onclick="applyPreset('silver')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-gray-300 transition"
+                                    data-theme="silver">
+                                    <div class="h-14 flex">
+                                        <div class="flex-1" style="background:#1e293b"></div>
+                                        <div class="flex-1" style="background:#94a3b8"></div>
+                                        <div class="flex-1" style="background:#f8fafc"></div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Plata Slate</p>
+                                        <p class="text-[10px] text-gray-400">Gris Azulado</p>
+                                    </div>
+                                </button>
+
+                                <!-- ░░░░ GRADIENTES ░░░░ -->
+                                <div class="col-span-2 sm:col-span-3 mt-2 mb-1">
+                                    <p
+                                        class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                        <span class="flex-1 h-px bg-gray-100"></span>
+                                        Temas con Gradiente
+                                        <span class="flex-1 h-px bg-gray-100"></span>
+                                    </p>
+                                </div>
+
+                                <!-- Gradiente: Aurora -->
+                                <button onclick="applyPreset('aurora')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-cyan-400 transition"
+                                    data-theme="aurora">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Aurora Ártica</p>
+                                        <p class="text-[10px] text-gray-400">Azul profundo · Gradiente</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Sunset -->
+                                <button onclick="applyPreset('sunset')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-400 transition"
+                                    data-theme="sunset">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#ff512f,#dd2476)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Atardecer</p>
+                                        <p class="text-[10px] text-gray-400">Naranja → Magenta</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Ocean -->
+                                <button onclick="applyPreset('ocean')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-blue-400 transition"
+                                    data-theme="ocean">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#0052d4,#4364f7,#6fb1fc)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Océano</p>
+                                        <p class="text-[10px] text-gray-400">Azul eléctrico · Gradiente</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Gemini -->
+                                <button onclick="applyPreset('gemini')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-purple-400 transition"
+                                    data-theme="gemini">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#4285f4,#9b72cb,#d96570)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Gemini</p>
+                                        <p class="text-[10px] text-gray-400">Azul → Púrpura → Rosa</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Mint -->
+                                <button onclick="applyPreset('mint')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-green-300 transition"
+                                    data-theme="mint">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Menta Fresca</p>
+                                        <p class="text-[10px] text-gray-400">Verde → Turquesa</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Rose Gold -->
+                                <button onclick="applyPreset('rosegold')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-pink-300 transition"
+                                    data-theme="rosegold">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#b76e79,#e8a0a0,#f5d0c1)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Rose Gold</p>
+                                        <p class="text-[10px] text-gray-400">Rosa metálico · Premium</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Midnight -->
+                                <button onclick="applyPreset('midnight')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-indigo-400 transition"
+                                    data-theme="midnight">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#141e30,#243b55)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Midnight</p>
+                                        <p class="text-[10px] text-gray-400">Azul medianoche</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Lava -->
+                                <button onclick="applyPreset('lava')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-red-400 transition"
+                                    data-theme="lava">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#200122,#6f0000)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Lava</p>
+                                        <p class="text-[10px] text-gray-400">Oscuro → Rojo profundo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Candy -->
+                                <button onclick="applyPreset('candy')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-pink-400 transition"
+                                    data-theme="candy">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#f953c6,#b91d73)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Candy</p>
+                                        <p class="text-[10px] text-gray-400">Rosa eléctrico → Fucsia</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Forrest -->
+                                <button onclick="applyPreset('forrest')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-green-600 transition"
+                                    data-theme="forrest">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#134e5e,#71b280)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Selva</p>
+                                        <p class="text-[10px] text-gray-400">Teal → Verde selva</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Gold Luxury -->
+                                <button onclick="applyPreset('luxury')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-yellow-400 transition"
+                                    data-theme="luxury">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Gold Luxury</p>
+                                        <p class="text-[10px] text-gray-400">Morado profundo · Lujo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Titanium -->
+                                <button onclick="applyPreset('titanium')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-slate-400 transition"
+                                    data-theme="titanium">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#283048,#859398)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Titanio</p>
+                                        <p class="text-[10px] text-gray-400">Metálico · Industrial</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Peach -->
+                                <button onclick="applyPreset('peach')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-300 transition"
+                                    data-theme="peach">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#ed8966,#ffb347)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Durazno</p>
+                                        <p class="text-[10px] text-gray-400">Piel cálida · Suave</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Cyber -->
+                                <button onclick="applyPreset('cyber')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-yellow-300 transition"
+                                    data-theme="cyber">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#0a0a0a,#1a1a2e,#16213e)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Cyberpunk</p>
+                                        <p class="text-[10px] text-gray-400">Negro → Índigo oscuro</p>
+                                    </div>
+                                </button>
+
+                                <!-- Gradiente: Arctic -->
+                                <button onclick="applyPreset('arctic')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-sky-300 transition"
+                                    data-theme="arctic">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Ártico</p>
+                                        <p class="text-[10px] text-gray-400">Azul glaciar · Frío</p>
+                                    </div>
+                                </button>
+
+                                <!-- ░░░░ MÁS GRADIENTES ░░░░ -->
+                                <div class="col-span-2 sm:col-span-3 mt-2 mb-1">
+                                    <p
+                                        class="text-[10px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                        <span class="flex-1 h-px bg-gray-100"></span>
+                                        Edición Especial
+                                        <span class="flex-1 h-px bg-gray-100"></span>
+                                    </p>
+                                </div>
+
+                                <!-- Neon -->
+                                <button onclick="applyPreset('neon')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-green-400 transition"
+                                    data-theme="neon">
+                                    <div class="h-14 relative overflow-hidden"
+                                        style="background:linear-gradient(135deg,#0d0d0d,#003300)">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span
+                                                style="color:#39ff14;font-size:20px;text-shadow:0 0 10px #39ff14">◼</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Neon</p>
+                                        <p class="text-[10px] text-gray-400">Negro + Verde Neón</p>
+                                    </div>
+                                </button>
+
+                                <!-- Cherry -->
+                                <button onclick="applyPreset('cherry')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-red-400 transition"
+                                    data-theme="cherry">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#360033,#0b8793)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Cherry</p>
+                                        <p class="text-[10px] text-gray-400">Capricho → Teal</p>
+                                    </div>
+                                </button>
+
+                                <!-- Dusk -->
+                                <button onclick="applyPreset('dusk')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-purple-300 transition"
+                                    data-theme="dusk">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#2b1055,#7597de)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Dusk</p>
+                                        <p class="text-[10px] text-gray-400">Morado → Azul cielo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Matrix -->
+                                <button onclick="applyPreset('matrix')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-green-500 transition"
+                                    data-theme="matrix">
+                                    <div class="h-14 relative overflow-hidden"
+                                        style="background:linear-gradient(135deg,#000000,#001f00,#003300)">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span
+                                                style="color:#00ff41;font-size:11px;font-family:monospace;opacity:0.7">01
+                                                10 01</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Matrix</p>
+                                        <p class="text-[10px] text-gray-400">Verde código · Oscuro</p>
+                                    </div>
+                                </button>
+
+                                <!-- Volcanic -->
+                                <button onclick="applyPreset('volcanic')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-600 transition"
+                                    data-theme="volcanic">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#1a0000,#7c1500,#ff4500)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Volcánico</p>
+                                        <p class="text-[10px] text-gray-400">Negro → Rojo volcán</p>
+                                    </div>
+                                </button>
+
+                                <!-- Cotton Candy -->
+                                <button onclick="applyPreset('cotton')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-pink-200 transition"
+                                    data-theme="cotton">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#fccb90,#d57eeb)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Cotton Candy</p>
+                                        <p class="text-[10px] text-gray-400">Durazno → Lila pastel</p>
+                                    </div>
+                                </button>
+
+                                <!-- Electric -->
+                                <button onclick="applyPreset('electric')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-violet-500 transition"
+                                    data-theme="electric">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#3d0066,#7b00d4,#bf00ff)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Eléctrico</p>
+                                        <p class="text-[10px] text-gray-400">Violeta eléctrico</p>
+                                    </div>
+                                </button>
+
+                                <!-- Golden Hour -->
+                                <button onclick="applyPreset('golden')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-yellow-500 transition"
+                                    data-theme="golden">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#f7971e,#ffd200)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Golden Hour</p>
+                                        <p class="text-[10px] text-gray-400">Naranja → Amarillo oro</p>
+                                    </div>
+                                </button>
+
+                                <!-- Nordic -->
+                                <button onclick="applyPreset('nordic')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-cyan-300 transition"
+                                    data-theme="nordic">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#1b2a4a,#2e6b8a,#76d7ea)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Nórdico</p>
+                                        <p class="text-[10px] text-gray-400">Azul escandinavo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Cherry Bloom -->
+                                <button onclick="applyPreset('bloom')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-pink-300 transition"
+                                    data-theme="bloom">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#ff9a9e,#fad0c4,#ffecd2)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Cherry Bloom</p>
+                                        <p class="text-[10px] text-gray-400">Rosa pétalo suave</p>
+                                    </div>
+                                </button>
+
+                                <!-- Thunder -->
+                                <button onclick="applyPreset('thunder')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-indigo-400 transition"
+                                    data-theme="thunder">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#1c1c2e,#2d2b55,#3d3870)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Thunder</p>
+                                        <p class="text-[10px] text-gray-400">Tormenta · Índigo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Holographic -->
+                                <button onclick="applyPreset('holographic')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-fuchsia-400 transition"
+                                    data-theme="holographic">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#667eea,#764ba2,#f093fb,#f5576c)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Holográfico</p>
+                                        <p class="text-[10px] text-gray-400">Arcoíris premium</p>
+                                    </div>
+                                </button>
+
+                                <!-- Obsidian -->
+                                <button onclick="applyPreset('obsidian')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-slate-500 transition"
+                                    data-theme="obsidian">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#0a0a0a,#1a1a2e,#16213e,#0f3460)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Obsidiana</p>
+                                        <p class="text-[10px] text-gray-400">Negro profundo cuádruple</p>
+                                    </div>
+                                </button>
+
+                                <!-- Paradise -->
+                                <button onclick="applyPreset('paradise')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-emerald-400 transition"
+                                    data-theme="paradise">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#00b09b,#96c93d)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Paraíso</p>
+                                        <p class="text-[10px] text-gray-400">Turquesa → Verde lima</p>
+                                    </div>
+                                </button>
+
+                                <!-- Blazing -->
+                                <button onclick="applyPreset('blazing')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-red-500 transition"
+                                    data-theme="blazing">
+                                    <div class="h-14" style="background:linear-gradient(135deg,#f83600,#f9d423)"></div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Blazing</p>
+                                        <p class="text-[10px] text-gray-400">Rojo fuego → Amarillo</p>
+                                    </div>
+                                </button>
+
+                                <!-- Abyss -->
+                                <button onclick="applyPreset('abyss')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-purple-600 transition"
+                                    data-theme="abyss">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#080016,#150025,#1e003b,#3b0070)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Abyss</p>
+                                        <p class="text-[10px] text-gray-400">Abismo · Ultra oscuro</p>
+                                    </div>
+                                </button>
+
+                                <!-- Tropical -->
+                                <button onclick="applyPreset('tropical')"
+                                    class="theme-preset-btn rounded-xl overflow-hidden border-2 border-transparent hover:border-teal-400 transition"
+                                    data-theme="tropical">
+                                    <div class="h-14"
+                                        style="background:linear-gradient(135deg,#11998e,#38ef7d,#00b4d8)">
+                                    </div>
+                                    <div class="bg-white px-3 py-2 text-left">
+                                        <p class="text-xs font-black text-gray-800">Tropical</p>
+                                        <p class="text-[10px] text-gray-400">Verde → Turquesa cian</p>
+                                    </div>
+                                </button>
+
+                            </div>
+                        </div>
+
+
+                        <!-- Personalizar colores (avanzado) -->
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+                            <p class="text-xs font-black text-gray-700 uppercase tracking-widest">Personalizar Colores
+                            </p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Color
+                                        Principal (Fondo Hero)</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="colorPrimary" value="#0a0a0a"
+                                            oninput="previewCustomTheme()"
+                                            class="w-10 h-10 rounded-lg cursor-pointer border border-gray-200">
+                                        <input type="text" id="colorPrimaryHex" value="#0a0a0a"
+                                            oninput="syncColorFromText('colorPrimary','colorPrimaryHex')"
+                                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Color
+                                        Acento (Botones, Links)</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="colorAccent" value="#00b4d8"
+                                            oninput="previewCustomTheme()"
+                                            class="w-10 h-10 rounded-lg cursor-pointer border border-gray-200">
+                                        <input type="text" id="colorAccentHex" value="#00b4d8"
+                                            oninput="syncColorFromText('colorAccent','colorAccentHex')"
+                                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Color
+                                        de Fondo</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="colorBg" value="#f8f8f8" oninput="previewCustomTheme()"
+                                            class="w-10 h-10 rounded-lg cursor-pointer border border-gray-200">
+                                        <input type="text" id="colorBgHex" value="#f8f8f8"
+                                            oninput="syncColorFromText('colorBg','colorBgHex')"
+                                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Color
+                                        de Texto</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="colorText" value="#0a0a0a"
+                                            oninput="previewCustomTheme()"
+                                            class="w-10 h-10 rounded-lg cursor-pointer border border-gray-200">
+                                        <input type="text" id="colorTextHex" value="#0a0a0a"
+                                            oninput="syncColorFromText('colorText','colorTextHex')"
+                                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="saveTheme()"
+                            class="w-full bg-gradient-to-r from-[#0d1b2a] to-[#1b2e45] hover:opacity-90 text-white font-black py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> Guardar Tema en la Tienda
+                        </button>
+
+                        <div id="themeSaveResult"
+                            class="hidden bg-green-50 border border-green-200 text-green-700 font-semibold text-sm rounded-xl p-4 flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i> <span>Tema guardado. Se aplicará en la
+                                tienda al recargar.</span>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- ══ TAB: IMAGENES BODY SECTION ════════════════════════════════════════ -->
+                <div id="tab-bodysection" class="tab-content">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-6 md:p-8">
+                        <div class="mb-6">
+                            <h3 class="font-black text-[#0d1b2a] text-xl uppercase tracking-tighter">Imágenes Body Section</h3>
+                            <p class="text-sm text-gray-400 mt-1">Configura las imágenes que se mostrarán rotando (como banner) cuando el catálogo esté esperando selección o vacío.</p>
+                        </div>
+
+                        <div class="max-w-xl">
+                            <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">
+                                <i class="fas fa-images text-teal-500 mr-1"></i> Banners (Rotación Automática)
+                            </label>
+
+                            <div id="bodySectionImagesContainer" class="grid grid-cols-2 gap-4 mb-4">
+                                <!-- Las imágenes se cargarán y renderizarán aquí por JS -->
+                            </div>
+
+                            <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-teal-400 transition cursor-pointer bg-gray-50 flex items-center justify-center mb-6 py-6"
+                                onclick="openCloudinaryWidget('bodysection')">
+                                <div class="flex flex-col items-center justify-center py-4 gap-3 text-center px-4">
+                                    <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-plus text-2xl text-teal-400"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-sm font-black text-gray-600">Añadir nueva imagen</p>
+                                        <p class="text-[11px] text-gray-400 mt-1 font-semibold leading-relaxed">Las imágenes alternarán cada 4 segundos sin flechas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="saveBodySection()" id="saveBodySectionBtn"
+                                class="w-full bg-[#0d1b2a] hover:bg-[#1b2e45] text-white font-black py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-save"></i> Guardar Imágenes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- ══ TAB: IMAGENES PRE FOOTER ════════════════════════════════════════ -->
+                <div id="tab-prefooter" class="tab-content">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-6 md:p-8">
+                        <div class="mb-6">
+                            <h3 class="font-black text-[#0d1b2a] text-xl uppercase tracking-tighter">Imágenes Before Footer</h3>
+                            <p class="text-sm text-gray-400 mt-1">Configura las imágenes (banners) que se mostrarán al final de la página antes del footer.</p>
+                        </div>
+
+                        <div class="max-w-xl">
+                            <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">
+                                <i class="fas fa-images text-indigo-500 mr-1"></i> Banners Estáticos
+                            </label>
+
+                            <div id="preFooterImagesContainer" class="grid grid-cols-2 gap-4 mb-4">
+                                <!-- Las imágenes se cargarán y renderizarán aquí por JS -->
+                            </div>
+
+                            <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-indigo-400 transition cursor-pointer bg-gray-50 flex items-center justify-center mb-6 py-6"
+                                onclick="openCloudinaryWidget('prefooter')">
+                                <div class="flex flex-col items-center justify-center py-4 gap-3 text-center px-4">
+                                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-plus text-2xl text-indigo-400"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-sm font-black text-gray-600">Añadir nueva imagen</p>
+                                        <p class="text-[11px] text-gray-400 mt-1 font-semibold leading-relaxed">Estas imágenes aparecerán en orden vertical.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="savePreFooter()" id="savePreFooterBtn"
+                                class="w-full bg-[#0d1b2a] hover:bg-[#1b2e45] text-white font-black py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-save"></i> Guardar Imágenes Pre-Footer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ══ TAB: EDITOR VISUAL (Wix-like) ════════════════════════════════════════ -->
+                <div id="tab-editor-visual" class="tab-content" style="min-height:80vh;">
+                    <style>
+                        .wix-editor-wrap { display:flex; gap:16px; height:calc(100vh - 200px); min-height:600px; }
+                        .wix-panel { width:340px; flex-shrink:0; background:#fff; border-radius:20px; border:1px solid #e5e7eb; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06); }
+                        .wix-panel-sections { display:flex; border-bottom:1px solid #f1f5f9; overflow-x:auto; flex-shrink:0; background:#f8fafc; }
+                        .wix-sec-btn { padding:10px 14px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; white-space:nowrap; border:none; background:transparent; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
+                        .wix-sec-btn.active { color:#E91E63; border-bottom-color:#E91E63; background:#fff; }
+                        .wix-sec-btn:hover:not(.active) { color:#475569; background:#fff; }
+                        .wix-sec-content { display:none; padding:16px; flex:1; overflow-y:auto; }
+                        .wix-sec-content.active { display:block; }
+                        .wix-ctrl-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+                        .wix-ctrl-label { font-size:11px; font-weight:700; color:#475569; flex:1; }
+                        .wix-color-swatch { width:32px; height:32px; border-radius:8px; border:2px solid #e2e8f0; cursor:pointer; overflow:hidden; position:relative; }
+                        .wix-color-swatch input[type=color] { position:absolute; inset:-4px; width:140%; height:140%; opacity:0; cursor:pointer; }
+                        .wix-color-preview { width:100%; height:100%; pointer-events:none; border-radius:6px; }
+                        .wix-slider-wrap { display:flex; align-items:center; gap:8px; }
+                        .wix-slider { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; background:#e2e8f0; outline:none; }
+                        .wix-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#E91E63; cursor:pointer; }
+                        .wix-slider-val { font-size:10px; font-weight:900; color:#64748b; min-width:32px; text-align:right; }
+                        .wix-section-title { font-size:10px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; margin-top:14px; display:flex; align-items:center; gap:6px; }
+                        .wix-section-title::before { content:''; flex:1; height:1px; background:#f1f5f9; }
+                        .wix-section-title:first-child { margin-top:0; }
+                        .wix-font-select { width:100%; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:600; color:#334155; outline:none; }
+                        .wix-font-select:focus { border-color:#E91E63; box-shadow:0 0 0 3px rgba(233,30,99,.1); }
+                        .wix-radius-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
+                        .wix-radius-btn { border:2px solid #e2e8f0; background:#f8fafc; padding:8px 4px; font-size:9px; font-weight:900; color:#64748b; cursor:pointer; text-align:center; transition:all .15s; border-radius:6px; }
+                        .wix-radius-btn.active { border-color:#E91E63; color:#E91E63; background:#fff0f4; }
+                        .wix-toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+                        .wix-toggle input { opacity:0; width:0; height:0; }
+                        .wix-toggle-slider { position:absolute; inset:0; background:#cbd5e1; border-radius:22px; cursor:pointer; transition:.2s; }
+                        .wix-toggle-slider::before { content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.2s; }
+                        .wix-toggle input:checked + .wix-toggle-slider { background:#E91E63; }
+                        .wix-toggle input:checked + .wix-toggle-slider::before { transform:translateX(18px); }
+                        .wix-preview-wrap { flex:1; background:#e2e8f0; border-radius:20px; overflow:hidden; display:flex; flex-direction:column; border:1px solid #d1d5db; box-shadow:0 4px 24px rgba(0,0,0,0.06); }
+                        .wix-preview-toolbar { background:#1e293b; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-radius:20px 20px 0 0; flex-shrink:0; }
+                        .wix-dev-btn { background:rgba(255,255,255,.08); border:none; color:rgba(255,255,255,.6); padding:5px 12px; border-radius:8px; font-size:10px; font-weight:900; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:5px; }
+                        .wix-dev-btn.active, .wix-dev-btn:hover { background:rgba(255,255,255,.18); color:#fff; }
+                        .wix-preview-iframe-wrap { flex:1; background:#f0f0f0; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; transition:all .3s; }
+                        .wix-preview-iframe-wrap iframe { border:none; background:#fff; transition:all .3s; }
+                        .wix-preview-iframe-wrap.device-desktop iframe { width:100%; height:100%; }
+                        .wix-preview-iframe-wrap.device-tablet iframe { width:768px; max-width:100%; height:100%; box-shadow:0 0 40px rgba(0,0,0,.2); border-radius:4px; }
+                        .wix-preview-iframe-wrap.device-mobile iframe { width:390px; max-width:100%; height:100%; box-shadow:0 0 40px rgba(0,0,0,.2); border-radius:16px; }
+                        .wix-unsaved-badge { background:#fef3c7; border:1px solid #fcd34d; color:#92400e; font-size:9px; font-weight:900; padding:2px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.06em; }
+                        .wix-save-btn { background:linear-gradient(135deg,#E91E63,#C2185B); border:none; color:#fff; padding:8px 18px; border-radius:10px; font-size:11px; font-weight:900; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px; box-shadow:0 4px 12px rgba(233,30,99,.35); }
+                        .wix-save-btn:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(233,30,99,.4); }
+                        .wix-restore-btn { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.7); padding:8px 12px; border-radius:10px; font-size:10px; font-weight:900; cursor:pointer; transition:all .2s; }
+                        .wix-restore-btn:hover { background:rgba(255,255,255,.18); color:#fff; }
+                        .hex-input { width:80px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:700; font-family:monospace; color:#334155; outline:none; }
+                        .hex-input:focus { border-color:#E91E63; }
+                        @media(max-width:900px) { .wix-editor-wrap { flex-direction:column; height:auto; } .wix-panel { width:100%; } .wix-preview-wrap { min-height:400px; } }
+                    </style>
+
+                    <!-- Top bar -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-[#E91E63] to-[#9C27B0] rounded-xl flex items-center justify-center">
+                                <i class="fas fa-paint-roller text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-black text-[#0d1b2a] text-base uppercase tracking-tight">Editor Visual — Estilo Wix</h2>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Personaliza cada sección de tu tienda en tiempo real</p>
+                            </div>
+                        </div>
+                        <div id="wix-unsaved-indicator" class="wix-unsaved-badge hidden ml-2">● Cambios sin guardar</div>
+                    </div>
+
+                    <div class="wix-editor-wrap">
+                        <!-- ── LEFT PANEL ────────────────────────────────────── -->
+                        <div class="wix-panel">
+                            <!-- Section tabs -->
+                            <div class="wix-panel-sections" id="wixSecTabs">
+                                <button class="wix-sec-btn active" onclick="switchWixSec('general',this)"><i class="fas fa-sliders-h mr-1"></i>General</button>
+                                <button class="wix-sec-btn" onclick="switchWixSec('header',this)"><i class="fas fa-heading mr-1"></i>Header</button>
+                                <button class="wix-sec-btn" onclick="switchWixSec('cards',this)"><i class="fas fa-th mr-1"></i>Cards/Mods</button>
+                                <button class="wix-sec-btn" onclick="switchWixSec('footer',this)"><i class="fas fa-layer-group mr-1"></i>Footer</button>
+                                <button class="wix-sec-btn" onclick="switchWixSec('advanced',this)"><i class="fas fa-tools mr-1"></i>Avanzado</button>
+                            </div>
+
+                            <!-- ── GENERAL (Body, Botones, Fuentes) ── -->
+                            <div id="wixSec-general" class="wix-sec-content active">
+                                <div class="wix-section-title">Barra de Anuncios</div>
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Color Barra</span>
+                                    <div class="wix-color-swatch">
+                                        <div class="wix-color-preview" id="swp-annBarBg" style="background:#00a0c6"></div>
+                                        <input type="color" id="editorColorAnnBarBg" value="#00a0c6" oninput="wixColorChange('annBarBg',this.value)">
+                                    </div>
+                                    <input type="text" class="hex-input ml-2" id="hex-annBarBg" value="#00a0c6" oninput="wixHexChange('annBarBg',this.value)">
+                                </div>
+                                <div class="wix-ctrl-row" style="flex-direction:column; align-items:flex-start; height:auto; gap:6px; margin-top:8px;">
+                                    <span class="wix-ctrl-label" style="font-size:10px;">Textos (Uno por línea para Carrusel)</span>
+                                    <textarea id="editorAnnTexts" class="w-full text-[11px] p-2 border rounded-lg bg-gray-50 focus:bg-white transition-all outline-none" style="min-height:60px;" oninput="wixTextChange('annTexts', this.value)"></textarea>
+                                </div>
+
+                                <div class="wix-section-title">Fondo de la Página</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Color de Fondo (Body)</span><div class="wix-color-swatch" id="sw-bodyBg"><div class="wix-color-preview" id="swp-bodyBg" style="background:#f8f8f8"></div><input type="color" id="editorColorBody" value="#f8f8f8" oninput="wixColorChange('bodyBg',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-bodyBg" value="#f8f8f8" oninput="wixHexChange('bodyBg',this.value)"></div>
+
+                                <div class="wix-section-title">Botones de Acción</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Botón (Agregar, Comprar)</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-btnBg" style="background:#000000"></div><input type="color" id="editorColorBtnBg" value="#000000" oninput="wixColorChange('btnBg',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-btnBg" value="#000000" oninput="wixHexChange('btnBg',this.value)"></div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Texto del Botón</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-btnText" style="background:#ffffff"></div><input type="color" id="editorColorBtnText" value="#ffffff" oninput="wixColorChange('btnText',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-btnText" value="#ffffff" oninput="wixHexChange('btnText',this.value)"></div>
+                                
+                                <div class="wix-section-title">Color de Acento (Naranjas en Tienda)</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Acento Principal</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-accent" style="background:#ff7f00"></div><input type="color" id="editorColorAccent" value="#ff7f00" oninput="wixColorChange('accent',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-accent" value="#ff7f00" oninput="wixHexChange('accent',this.value)"></div>
+
+                                <div class="wix-section-title">Tipografía (Letra)</div>
+                                <select id="editorFontFamily" class="wix-font-select mb-3" onchange="wixFontChange(this.value)">
+                                    <option value="font-sans">Outfit (Default)</option>
+                                    <option value="'Inter', sans-serif">Inter</option>
+                                    <option value="'Roboto', sans-serif">Roboto</option>
+                                    <option value="'Poppins', sans-serif">Poppins</option>
+                                    <option value="'Montserrat', sans-serif">Montserrat</option>
+                                    <option value="'Nunito', sans-serif">Nunito</option>
+                                    <option value="'Playfair Display', serif">Playfair Display</option>
+                                    <option value="'Lato', sans-serif">Lato</option>
+                                    <option value="'Open Sans', sans-serif">Open Sans</option>
+                                    <option value="'Pacifico', cursive">Pacifico</option>
+                                    <option value="'Dancing Script', cursive">Dancing Script</option>
+                                    <option value="'Anton', sans-serif">Anton</option>
+                                    <option value="'Oswald', sans-serif">Oswald</option>
+                                    <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+                                    <option value="'Abril Fatface', cursive">Abril Fatface</option>
+                                    <option value="'Lobster', cursive">Lobster</option>
+                                    <option value="'Raleway', sans-serif">Raleway</option>
+                                    <option value="'Lato', sans-serif">Lato</option>
+                                    <option value="'Playfair Display', serif">Playfair Display (Elegante)</option>
+                                    <option value="'Oswald', sans-serif">Oswald (Impactante)</option>
+                                    <option value="'Raleway', sans-serif">Raleway</option>
+                                    <option value="'Ubuntu', sans-serif">Ubuntu</option>
+                                    <option value="'Open Sans', sans-serif">Open Sans</option>
+                                    <option value="'Quicksand', sans-serif">Quicksand (Redondeada)</option>
+                                    <option value="font-serif">Georgia / Serif Tradicional</option>
+                                    <option value="font-mono">Courier (Monoespaciada)</option>
+                                    <option value="Arial, Helvetica, sans-serif">Arial / Helvetica (Clásica)</option>
+                                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                                </select>
+                            </div>
+
+                            <!-- ── HEADER ── -->
+                            <div id="wixSec-header" class="wix-sec-content">
+                                <div class="wix-section-title">Colores del Menú Superior (Header)</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Fondo Header</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-headerBg" style="background:#ffffff"></div><input type="color" id="editorColorHeaderBg" value="#ffffff" oninput="wixColorChange('headerBg',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-headerBg" value="#ffffff" oninput="wixHexChange('headerBg',this.value)"></div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Texto / Íconos Header</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-headerText" style="background:#333333"></div><input type="color" id="editorColorHeaderText" value="#333333" oninput="wixColorChange('headerText',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-headerText" value="#333333" oninput="wixHexChange('headerText',this.value)"></div>
+                            </div>
+
+                            <!-- ── CARDS Y MODALES ── -->
+                            <div id="wixSec-cards" class="wix-sec-content">
+                                <div class="wix-section-title">Tarjetas de Productos y Modales</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Fondo (Tarjetas y Modales)</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-cardBg" style="background:#ffffff"></div><input type="color" id="editorColorCardBg" value="#ffffff" oninput="wixColorChange('cardBg',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-cardBg" value="#ffffff" oninput="wixHexChange('cardBg',this.value)"></div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Color de Títulos</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-textMain" style="background:#1a1a1a"></div><input type="color" id="editorColorTextMain" value="#1a1a1a" oninput="wixColorChange('textMain',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-textMain" value="#1a1a1a" oninput="wixHexChange('textMain',this.value)"></div>
+                                
+                                <div class="wix-section-title">Forma de Bordes</div>
+                                <div class="wix-radius-grid">
+                                    <button class="wix-radius-btn" onclick="wixSetRadius('0px',this)" data-r="0px" style="border-radius:0">Cuadrado</button>
+                                    <button class="wix-radius-btn active" onclick="wixSetRadius('12px',this)" data-r="12px" style="border-radius:6px">Ligero</button>
+                                    <button class="wix-radius-btn" onclick="wixSetRadius('24px',this)" data-r="24px" style="border-radius:12px">Redondo</button>
+                                </div>
+                            </div>
+
+                            <!-- ── FOOTER ── -->
+                            <div id="wixSec-footer" class="wix-sec-content">
+                                <div class="wix-section-title">Colores de Pie de Página (Footer)</div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Fondo Footer</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-footerBg" style="background:#111111"></div><input type="color" id="editorColorFooterBg" value="#111111" oninput="wixColorChange('footerBg',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-footerBg" value="#111111" oninput="wixHexChange('footerBg',this.value)"></div>
+                                <div class="wix-ctrl-row"><span class="wix-ctrl-label">Texto Footer</span><div class="wix-color-swatch"><div class="wix-color-preview" id="swp-footerText" style="background:#ffffff"></div><input type="color" id="editorColorFooterText" value="#ffffff" oninput="wixColorChange('footerText',this.value)"></div><input type="text" class="hex-input ml-2" id="hex-footerText" value="#ffffff" oninput="wixHexChange('footerText',this.value)"></div>
+                            </div>
+
+                            <!-- ── AVANZADO (TOGGLES ESTILO WIX) ── -->
+                            <div id="wixSec-advanced" class="wix-sec-content">
+                                <div class="wix-section-title">Opciones de Diseño</div>
+                                
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Header Cristal (Efecto Blur)</span>
+                                    <label class="wix-toggle">
+                                        <input type="checkbox" id="tog-glassHeader" onchange="wixToggleChange('glassHeader',this.checked)">
+                                        <div class="wix-toggle-slider"></div>
+                                    </label>
+                                </div>
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Sombras Profundas en Tarjetas</span>
+                                    <label class="wix-toggle">
+                                        <input type="checkbox" id="tog-cardShadow" onchange="wixToggleChange('cardShadow',this.checked)">
+                                        <div class="wix-toggle-slider"></div>
+                                    </label>
+                                </div>
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Ocultar Barra de Anuncios Ppal</span>
+                                    <label class="wix-toggle">
+                                        <input type="checkbox" id="tog-hideTopBanner" onchange="wixToggleChange('hideTopBanner',this.checked)">
+                                        <div class="wix-toggle-slider"></div>
+                                    </label>
+                                </div>
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Ocultar Botón WhatsApp Flotante</span>
+                                    <label class="wix-toggle">
+                                        <input type="checkbox" id="tog-hideWhatsApp" onchange="wixToggleChange('hideWhatsApp',this.checked)">
+                                        <div class="wix-toggle-slider"></div>
+                                    </label>
+                                </div>
+                                <div class="wix-ctrl-row">
+                                    <span class="wix-ctrl-label">Ocultar Footer Totalmente</span>
+                                    <label class="wix-toggle">
+                                        <input type="checkbox" id="tog-hideFooter" onchange="wixToggleChange('hideFooter',this.checked)">
+                                        <div class="wix-toggle-slider"></div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Actions -->
+                            <div style="padding:12px 14px; border-top:1px solid #f1f5f9; background:#fff; display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+                                <button onclick="wixSaveSettings()" id="wixSaveBtn" style="padding:11px 16px; background:linear-gradient(135deg,#E91E63,#C2185B); color:#fff; border:none; border-radius:10px; font-size:11px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(233,30,99,.3);">
+                                    <i class="fas fa-save"></i> Guardar en Tienda
+                                </button>
+                                <div style="display:flex; gap:8px;">
+                                    <button onclick="wixLoadLastSaved()" style="flex:1; padding:9px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:10px; font-weight:900; cursor:pointer; text-transform:uppercase;">
+                                        <i class="fas fa-history mr-1"></i> Último Guardado
+                                    </button>
+                                    <button onclick="wixFullResetStore()" style="flex:1; padding:9px; background:#fee2e2; color:#991b1b; border:none; border-radius:10px; font-size:10px; font-weight:900; cursor:pointer; text-transform:uppercase;">
+                                        <i class="fas fa-trash mr-1"></i> Reset Total
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── RIGHT PREVIEW ────────────────────────────────── -->
+                        <div class="wix-preview-wrap">
+                            <div class="wix-preview-toolbar">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="width:8px; height:8px; background:#22c55e; border-radius:50%; display:inline-block; box-shadow:0 0 6px #22c55e;"></span>
+                                    <span style="font-size:9px; font-weight:900; color:rgba(255,255,255,.6); text-transform:uppercase; letter-spacing:.08em;">Vista Previa en Tiempo Real</span>
+                                    <div id="wix-unsaved-dot" class="hidden" style="width:6px; height:6px; background:#f59e0b; border-radius:50%;"></div>
+                                </div>
+                                <div style="display:flex; gap:6px; align-items:center;">
+                                    <button class="wix-dev-btn active" id="devBtn-desktop" onclick="wixSetDevice('desktop')" title="Desktop"><i class="fas fa-desktop"></i><span style="font-size:9px">Desktop</span></button>
+                                    <button class="wix-dev-btn" id="devBtn-tablet" onclick="wixSetDevice('tablet')" title="Tablet"><i class="fas fa-tablet-alt"></i></button>
+                                    <button class="wix-dev-btn" id="devBtn-mobile" onclick="wixSetDevice('mobile')" title="Móvil"><i class="fas fa-mobile-alt"></i></button>
+                                    <div style="width:1px; height:20px; background:rgba(255,255,255,.1); margin:0 4px;"></div>
+                                    <button onclick="document.getElementById('wixPreviewFrame').src=document.getElementById('wixPreviewFrame').src" class="wix-dev-btn" title="Recargar preview"><i class="fas fa-sync-alt"></i></button>
+                                    <a href="https://articulos-redituables-altos.web.app" target="_blank" class="wix-dev-btn" title="Abrir en nueva pestaña"><i class="fas fa-external-link-alt"></i></a>
+                                </div>
+                            </div>
+                            <div class="wix-preview-iframe-wrap device-desktop" id="wixPreviewWrap">
+                                <iframe id="wixPreviewFrame" src="https://articulos-redituables-altos.web.app" frameborder="0" allow="same-origin"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /Content -->
+        </main>
+    </div>
+
+    <!-- ══ MODAL: SLIDE CARRUSEL ══════════════════════════════════════════════ -->
+    <div id="slideModal" class="modal-overlay fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+        style="opacity:0;pointer-events:none;">
+        <div class="modal-box bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[92vh]"
+            style="transform:scale(0.96)">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight">Nuevo Slide Hero</h3>
+                    <p class="text-xs text-gray-400 font-medium mt-0.5">Imagen de fondo completa (estilo Betterware)</p>
+                </div>
+                <button onclick="closeSlideModal()"
+                    class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-1 p-6 space-y-5">
+
+                <!-- Info banner -->
+                <div class="bg-teal-50 border border-teal-100 rounded-xl p-3 flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0 text-teal-600 text-xs">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-teal-700">Imagen de publicidad (Vertical o Banner)</p>
+                        <p class="text-xs text-teal-500 mt-0.5">Sube imágenes en formato alto (ej. 4:5 móvil) u horizontal (16:9 escritorio). Tu tienda se adaptará automáticamente.</p>
+                    </div>
+                </div>
+
+                <!-- Imágenes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Desktop Image -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">
+                            <i class="fas fa-desktop text-teal-500 mr-1"></i> Imagen PC (16:9)
+                        </label>
+                        <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-teal-400 transition cursor-pointer bg-gray-50 flex items-center justify-center p-2"
+                            onclick="openCloudinaryWidget('slide')" style="min-height: 200px;">
+                            <img id="slideImgPreview" src="" class="hidden w-full object-contain" style="max-height: 180px;">
+                            <div id="slideUploadIcon" class="flex flex-col items-center justify-center text-center">
+                                <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-cloud-upload-alt text-xl text-teal-400"></i>
+                                </div>
+                                <p class="text-[10px] font-black text-gray-600">Subir Imagen PC</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="slideImageUrl">
+                    </div>
+
+                    <!-- Mobile Image -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">
+                            <i class="fas fa-mobile-alt text-teal-500 mr-1"></i> Imagen Móvil (4:5)
+                        </label>
+                        <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-teal-400 transition cursor-pointer bg-gray-50 flex items-center justify-center p-2"
+                            onclick="openCloudinaryWidget('slideMobile')" style="min-height: 200px;">
+                            <img id="slideImgMobilePreview" src="" class="hidden w-full object-contain" style="max-height: 180px;">
+                            <div id="slideMobileUploadIcon" class="flex flex-col items-center justify-center text-center">
+                                <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-cloud-upload-alt text-xl text-teal-400"></i>
+                                </div>
+                                <p class="text-[10px] font-black text-gray-600">Subir Imagen Móvil</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="slideMobileImageUrl">
+                    </div>
+                </div>
+
+                <!-- Título y Subtítulo -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">
+                            Título del slide <span class="text-gray-300 font-normal normal-case">(aparece sobre la imagen)</span>
+                        </label>
+                        <input type="text" id="slideTitle" placeholder="Ej: MOVI HIELERA MAX $1200"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">
+                            Subtítulo / Descripción <span class="text-gray-300 font-normal normal-case">(opcional)</span>
+                        </label>
+                        <input type="text" id="slideSubtitle" placeholder="Ej: MÁXIMA capacidad y FRESCURA"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
+                    <p class="text-xs font-black text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-mouse-pointer text-orange-400"></i> Botón CTA (opcional)
+                    </p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Texto del botón</label>
+                            <input type="text" id="slideCtaText" placeholder="Ej: Comprar Ahora"
+                                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">URL destino</label>
+                            <input type="text" id="slideCtaUrl" placeholder="#catalogo"
+                                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orden -->
+                <div>
+                    <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Orden de aparición</label>
+                    <input type="number" id="slideOrder" value="1" min="1"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-400">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0 bg-gray-50 rounded-b-2xl">
+                <button onclick="closeSlideModal()"
+                    class="px-5 py-2.5 rounded-xl text-gray-600 font-bold text-sm hover:bg-gray-200 transition">Cancelar</button>
+                <button onclick="saveSlide()" id="saveSlideBtn"
+                    class="px-6 py-2.5 bg-[#00b4d8] hover:bg-[#0096b4] text-white rounded-xl font-black text-sm transition flex items-center gap-2 shadow-lg shadow-[#00b4d8]/30">
+                    <i class="fas fa-save"></i> <span>Guardar Slide</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MODAL: PRODUCTO ══════════════════════════════════════════════════════ -->
+    <div id="productModal" class="modal-overlay fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+        style="opacity:0;pointer-events:none;">
+        <div class="modal-box bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh]"
+            style="transform:scale(0.96)">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
+                <h3 id="productModalTitle" class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight">Nuevo
+                    Artículo</h3>
+                <button onclick="closeProductModal()"
+                    class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-1 p-6">
+                <form id="productForm" class="space-y-5">
+                    <input type="hidden" id="productId">
+
+                    <!-- Imagen -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-600 mb-2 uppercase tracking-wider">Imagen del
+                            Producto (Cloudinary)</label>
+                        <div id="uploadZone" class="upload-zone rounded-xl p-6 text-center"
+                            onclick="openCloudinaryWidget('product')">
+                            <img id="imgPreview" src="" class="hidden mx-auto mb-3 h-24 object-contain rounded-lg">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-300 mb-2 block" id="uploadIcon"></i>
+                            <p class="text-sm text-gray-400 font-semibold" id="uploadLabel">Haz clic para subir imagen principal</p>
+                            <p class="text-xs text-gray-300 mt-1">Se subirá a Cloudinary y se convertirá a WebP</p>
+                        </div>
+                        <input type="hidden" id="productImageUrl">
+                    </div>
+
+                    <!-- Imágenes Adicionales -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-black text-gray-600 uppercase tracking-wider">Imágenes Adicionales (Opcional)</label>
+                            <button type="button" onclick="addExtraImageField()" class="bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 transition">
+                                <i class="fas fa-plus"></i> Añadir foto
+                            </button>
+                        </div>
+                        <div id="extraImagesContainer" class="grid grid-cols-4 gap-3">
+                            <!-- Las imágenes extra se agregan por JS -->
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Nombre
+                                del Artículo</label>
+                            <input type="text" id="productName" required
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">SKU /
+                                Clave</label>
+                            <input type="text" id="productSKU" placeholder="Ej: ART-001"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a] uppercase">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Categoría</label>
+                            <input type="text" id="productCategory" list="categoryList" required
+                                placeholder="Ej: Papelería"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a] uppercase">
+                            <datalist id="categoryList">
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-4 mt-2">
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Disponibilidad</label>
+                            <select id="productStock" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                <option value="1">Disponible</option>
+                                <option value="0">No disponible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Estado</label>
+                            <select id="productStatus"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                <option value="Activo">Activo (Visible)</option>
+                                <option value="Inactivo">Inactivo / Oculto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-black text-gray-600 mb-1.5 uppercase tracking-wider">Descripción
+                            corta</label>
+                        <textarea id="productDesc" rows="2"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0d1b2a] resize-none"></textarea>
+                    </div>
+
+                    <!-- VARIANTES (COLORES/DISEÑOS) -->
+                    <div class="bg-gray-50/50 rounded-2xl p-5 border border-dashed border-gray-300">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4
+                                class="font-black text-[#0d1b2a] uppercase text-sm tracking-wider flex items-center gap-2">
+                                <i class="fas fa-palette text-purple-500"></i> Colores / Diseños (Opcional)
+                            </h4>
+                            <button type="button" onclick="addVariantField()"
+                                class="bg-purple-100 text-purple-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-200 transition">
+                                <i class="fas fa-plus"></i> Añadir opción
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3">Si este artículo
+                            tiene varios colores o diseños, añádelos aquí.</p>
+                        <div id="variantsContainer" class="space-y-3">
+                            <!-- Las variantes se agregan por JS, cada una con un nombre y una foto -->
+                        </div>
+                    </div>
+
+                    <!-- SECCIONES -->
+                    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
+                        <h4
+                            class="font-black text-indigo-800 uppercase text-sm tracking-wider mb-3 flex items-center gap-2">
+                            <i class="fas fa-layer-group text-indigo-400"></i> Secciones del catálogo
+                        </h4>
+                        <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-4">Selecciona en
+                            qué secciones aparecerá este artículo.</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-indigo-500 rounded"
+                                    value="novedades">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-sparkles text-indigo-500 w-4 pl-0.5"></i> Novedades</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-red-500 rounded"
+                                    value="masVendidos">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-fire text-red-500 w-4 pl-0.5"></i> Más vendidos</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-amber-500 rounded"
+                                    value="ofertas">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-tag text-amber-500 w-4 pl-0.5"></i> Ofertas especiales</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-violet-500 rounded"
+                                    value="destacados">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-star text-violet-500 w-4 pl-0.5"></i> Destacados del mes</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-cyan-500 rounded"
+                                    value="mayoreo">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-box-open text-cyan-500 w-4 pl-0.5"></i> Mayoreo</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-pink-500 rounded"
+                                    value="piezasUnicas">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-gem text-pink-500 w-4 pl-0.5"></i> Piezas únicas</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-yellow-500 rounded"
+                                    value="remates">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-bolt text-yellow-500 w-4 pl-0.5"></i> Remates</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-emerald-500 rounded"
+                                    value="exclusivo">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-lock text-emerald-500 w-4 pl-0.5"></i> Exclusivo online</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-blue-500 rounded"
+                                    value="temporada">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-calendar-alt text-blue-500 w-4 pl-0.5"></i> Oferta de
+                                    temporada</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-indigo-100 cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" class="section-check w-4 h-4 accent-teal-500 rounded"
+                                    value="nuevos">
+                                <span class="text-xs font-bold text-gray-700"><i
+                                        class="fas fa-rocket text-teal-500 w-4 pl-0.5"></i> Recién llegados</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- PRECIOS -->
+                    <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                        <h4
+                            class="font-black text-[#0d1b2a] uppercase text-sm tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fas fa-tags text-[#00b4d8]"></i> Estructura de Precios
+                        </h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Individual -->
+                            <div class="col-span-2">
+                                <label
+                                    class="block text-xs font-black text-gray-500 mb-1 uppercase tracking-wider">Precio
+                                    Individual (Base)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">$</span>
+                                    <input type="number" id="priceIndividual" required min="0" step="0.01"
+                                        class="w-full bg-white border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-[#0d1b2a]">
+                                </div>
+                            </div>
+
+                            <!-- Mayoreo -->
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-green-600 mb-1 uppercase tracking-wider">Precio
+                                    Mayoreo</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">$</span>
+                                    <input type="number" id="priceMayoreo" min="0" step="0.01"
+                                        class="w-full bg-white border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 mb-1 uppercase tracking-wider">Aplica
+                                    desde (pzs)</label>
+                                <input type="number" id="minMayoreo" min="1" value="5"
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <!-- Caja -->
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-blue-600 mb-1 uppercase tracking-wider">Precio
+                                    Caja</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">$</span>
+                                    <input type="number" id="priceCaja" min="0" step="0.01"
+                                        class="w-full bg-white border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 mb-1 uppercase tracking-wider">Aplica
+                                    desde (pzs)</label>
+                                <input type="number" id="minCaja" min="1" value="24"
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+
+                            <!-- Especial -->
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-purple-600 mb-1 uppercase tracking-wider">Precio
+                                    Especial / VIP</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">$</span>
+                                    <input type="number" id="priceEspecial" min="0" step="0.01"
+                                        class="w-full bg-white border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 mb-1 uppercase tracking-wider">Aplica
+                                    desde (pzs)</label>
+                                <input type="number" id="minEspecial" min="1" value="50"
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div
+                class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0 bg-gray-50 rounded-b-2xl">
+                <button onclick="closeProductModal()"
+                    class="px-5 py-2.5 rounded-xl text-gray-600 font-bold text-sm hover:bg-gray-200 transition">Cancelar</button>
+                <button onclick="saveProduct()" id="saveProductBtn"
+                    class="px-6 py-2.5 bg-[#0d1b2a] hover:bg-[#1b2e45] text-white rounded-xl font-black text-sm transition flex items-center gap-2 shadow-lg shadow-[#0d1b2a]/20">
+                    <i class="fas fa-save"></i> <span>Guardar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MODAL: DATOS FACTURACIÓN CLIENTE ══════════════════════════════════ -->
+    <div id="clientFacturacionModal"
+        class="modal-overlay fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+        style="opacity:0;pointer-events:none;">
+        <div class="modal-box bg-white w-full max-w-md rounded-2xl shadow-2xl" style="transform:scale(0.96)">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-black text-[#0d1b2a] text-lg uppercase tracking-tight">Datos Fiscales</h3>
+                <button onclick="closeModal('clientFacturacionModal')"
+                    class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="factClientId">
+                <div>
+                    <label
+                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">RFC</label>
+                    <input type="text" id="factRFC"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Razón
+                        Social</label>
+                    <input type="text" id="factRazon"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Código
+                        Postal</label>
+                    <input type="text" id="factCP"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Uso de
+                        CFDI</label>
+                    <input type="text" id="factUso"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#00b4d8]">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-2xl">
+                <button onclick="closeModal('clientFacturacionModal')"
+                    class="px-5 py-2.5 rounded-xl text-gray-600 font-bold text-sm hover:bg-gray-200 transition">Cerrar</button>
+                <button onclick="saveClientFacturacion()"
+                    class="px-6 py-2.5 bg-[#0d1b2a] hover:bg-[#1b2e45] text-white rounded-xl font-black text-sm transition flex items-center gap-2 shadow-lg shadow-[#0d1b2a]/20">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js?v=5"></script>
+</body>
+
+</html>

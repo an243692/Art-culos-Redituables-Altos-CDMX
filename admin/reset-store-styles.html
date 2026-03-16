@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reset Estilos Tienda</title>
+<style>
+  body { font-family: sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0d1b2a; margin:0; }
+  .box { background:#fff; border-radius:20px; padding:40px; max-width:480px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  h1 { color:#0d1b2a; font-size:22px; margin-bottom:8px; }
+  p { color:#64748b; font-size:14px; margin-bottom:24px; }
+  button { background:#E91E63; color:#fff; border:none; border-radius:12px; padding:14px 32px; font-size:15px; font-weight:700; cursor:pointer; width:100%; margin-bottom:12px; }
+  button:hover { background:#C2185B; }
+  .btn-secondary { background:#f1f5f9; color:#475569; }
+  .btn-secondary:hover { background:#e2e8f0; }
+  #status { margin-top:16px; padding:12px; border-radius:10px; font-size:14px; font-weight:600; display:none; }
+  .ok { background:#d1fae5; color:#065f46; }
+  .err { background:#fee2e2; color:#991b1b; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🎨 Restaurar Estilos de la Tienda</h1>
+  <p>Esto borrará todos los estilos del Editor Visual y devolverá la tienda a su apariencia original.</p>
+  <button onclick="doReset()">🗑️ Borrar estilos del Editor Visual</button>
+  <button class="btn-secondary" onclick="window.close()">Cancelar</button>
+  <div id="status"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // Misma config que el admin
+  const firebaseConfig = (() => {
+    // Intenta leer la config del localStorage del admin
+    const raw = localStorage.getItem('firebaseConfig');
+    if (raw) return JSON.parse(raw);
+    return null;
+  })();
+
+  let db = null;
+
+  if (firebaseConfig) {
+    const app = initializeApp(firebaseConfig, 'reset-app');
+    db = getFirestore(app);
+  }
+
+  window.doReset = async () => {
+    const status = document.getElementById('status');
+    status.style.display = 'block';
+    status.className = '';
+    status.textContent = 'Conectando a Firestore...';
+
+    if (!db) {
+      status.className = 'err';
+      status.innerHTML = '❌ No se encontró la configuración de Firebase.<br><br>Por favor abre el admin panel primero, luego vuelve a esta página.';
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, 'settings', 'storeDesign'), { _reset: true });
+      status.className = 'ok';
+      status.innerHTML = '✅ ¡Listo! Los estilos del Editor Visual fueron borrados.<br><br>Recarga la tienda para ver los cambios.';
+    } catch (err) {
+      status.className = 'err';
+      status.textContent = '❌ Error: ' + err.message;
+    }
+  };
+</script>
+</body>
+</html>
