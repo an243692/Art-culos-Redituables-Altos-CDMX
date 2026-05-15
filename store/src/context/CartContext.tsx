@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 
 export interface Product {
     id: string;
@@ -11,7 +12,7 @@ export interface Product {
     description: string;
     imageUrl: string;
     extraImages?: string[];
-    variants?: { name: string; imageUrl: string }[];
+    variants?: { name: string; imageUrl: string; sku?: string; description?: string }[];
     precioIndividual: number;
     precioMayoreo: number;
     minMayoreo: number;
@@ -21,18 +22,18 @@ export interface Product {
     minEspecial?: number;
     stock?: number;
     sections?: string[];
-    flags?: string[];
+    opcionesExtra?: { name: string; imageUrl: string }[];
 }
 
 export interface CartItem extends Product {
     quantity: number;
-    selectedVariant?: { name: string; imageUrl: string };
+    selectedVariant?: { name: string; imageUrl: string; sku?: string; description?: string };
     cartItemId?: string; // Para distinguir mismo id con diferente variante
 }
 
 interface CartContextProps {
     cart: CartItem[];
-    addToCart: (product: Product, qty: number, variant?: { name: string; imageUrl: string }) => void;
+    addToCart: (product: Product, qty: number, variant?: { name: string; imageUrl: string; sku?: string; description?: string }) => void;
     removeFromCart: (id: string) => void;
     updateQuantity: (id: string, qty: number) => void;
     clearCart: () => void;
@@ -60,36 +61,48 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('altos_cart', JSON.stringify(cart));
     }, [cart]);
 
-    const calcItemPrice = useCallback((item: CartItem): number => {
-        let price = Number(item.precioIndividual) || 0;
+    const { clientData } = useAuth();
 
-        // Sumamos TODAS las variantes del MISMO producto dentro del carrito para poder aplicar 
-        // precios de mayoreo/caja, incluso si escogen colores diferentes.
-        const totalQtyInCart = cart
+    const calcItemPrice = useCallback((item: CartItem): number => {
+        const pInd = Number(item.precioIndividual) || 0;
+        const pMay = Number(item.precioMayoreo) || 0;
+        const mMay = Number(item.minMayoreo) || 0;
+        const pCaja = Number(item.precioCaja) || 0;
+        const mCaja = Number(item.minCaja) || 0;
+        const pEsp = Number(item.precioEspecial) || 0;
+        const mEsp = Number(item.minEspecial) || 0;
+
+        // VIP: precio especial
+        const hasVipAccess = clientData?.precioEspecial === true;
+        if (hasVipAccess && pEsp > 0) return pEsp;
+
+        // Total de piezas en TODO el carrito (para mayoreo global)
+        const totalUnitsInCart = cart.reduce((sum, p) => sum + Number(p.quantity || 0), 0);
+        // Total de piezas de ESTE producto (para precio caja)
+        const totalProductUnits = cart
             .filter(p => p.id === item.id)
             .reduce((sum, p) => sum + Number(p.quantity || 0), 0);
 
-        // Determinamos la cantidad a usar (usamos la cant. actual del item como fallback mínimo)
-        const qty = Math.max(Number(item.quantity) || 1, totalQtyInCart);
+        // Precio especial por cantidad
+        if (mEsp > 0 && totalProductUnits >= mEsp && pEsp > 0) return pEsp;
 
-        const mCaja = Number(item.minCaja) || 0;
-        const pCaja = Number(item.precioCaja) || 0;
-        const mMay = Number(item.minMayoreo) || 0;
-        const pMay = Number(item.precioMayoreo) || 0;
-        const mEsp = Number(item.minEspecial) || 0;
-        const pEsp = Number(item.precioEspecial) || 0;
+        // ¿Califica para mayoreo? (total carrito >= minMayoreo)
+        const califaMayoreo = mMay > 0 && totalUnitsInCart >= mMay && pMay > 0;
 
-        let applicablePrices = [price]; // Empezamos siempre con el individual Base
+        // ¿Califica para precio de caja? (unidades de ESTE producto >= minCaja)
+        const califaCaja = mCaja > 0 && totalProductUnits >= mCaja && pCaja > 0;
 
-        if (mMay > 0 && qty >= mMay && pMay > 0) applicablePrices.push(pMay);
-        if (mCaja > 0 && qty >= mCaja && pCaja > 0) applicablePrices.push(pCaja);
-        if (mEsp > 0 && qty >= mEsp && pEsp > 0) applicablePrices.push(pEsp);
+        // Precio caja es el mejor disponible cuando califica
+        if (califaCaja) return pCaja;
 
-        // Retorna el precio más bajo de entre todos los que hayan "desbloqueado" según la cantidad
-        return Math.min(...applicablePrices.filter(p => p > 0));
-    }, [cart]);
+        // Si califica para mayoreo
+        if (califaMayoreo) return pMay;
 
-    const addToCart = useCallback((product: Product, quantity: number, variant?: { name: string; imageUrl: string }) => {
+        // Precio individual base
+        return pInd;
+    }, [cart, clientData]);
+
+    const addToCart = useCallback((product: Product, quantity: number, variant?: { name: string; imageUrl: string; sku?: string; description?: string }) => {
         setCart(prev => {
             const variantHash = variant ? `-${variant.name}` : '';
             const cartItemId = `${product.id}${variantHash}`;

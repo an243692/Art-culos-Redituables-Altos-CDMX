@@ -14,13 +14,14 @@ export interface HeroSlide {
 }
 
 export function HeroDynamic({
-  slides, currentSlide, onNext, onPrev, onDot,
+  slides, currentSlide, onNext, onPrev, onDot, onCtaClick
 }: {
   slides: HeroSlide[];
   currentSlide: number;
   onNext: () => void;
   onPrev: () => void;
   onDot: (i: number) => void;
+  onCtaClick?: (url: string) => void;
   logoUrl: string;
   primaryColor?: string;
 }) {
@@ -52,10 +53,10 @@ export function HeroDynamic({
           >
             <picture className="w-full flex">
               {s.mobileImageUrl && (
-                <source media="(max-width: 767px)" srcSet={cldOpt(s.mobileImageUrl, 800)} />
+                <source media="(max-width: 767px)" srcSet={s.mobileImageUrl} />
               )}
               <img
-                src={cldOpt(s.imageUrl, 1200)}
+                src={s.imageUrl}
                 alt={s.title || `Slide ${i + 1}`}
                 // @ts-ignore
                 fetchPriority={i === 0 ? 'high' : 'low'}
@@ -77,7 +78,7 @@ export function HeroDynamic({
       })}
 
       {/* ── Text Overlay (solo slide activo) ── */}
-      {(slide.title || slide.subtitle) && (
+      {(slide.title || slide.subtitle || slide.ctaText) && (
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-10 md:pb-12 flex flex-col items-start z-20">
           {slide.title && (
             <p className="text-white font-black text-xl md:text-3xl leading-tight drop-shadow-lg mb-1">
@@ -90,12 +91,25 @@ export function HeroDynamic({
             </p>
           )}
           {slide.ctaText && (
-            <a
-              href={slide.ctaUrl || '#catalogo'}
-              className="inline-block bg-white text-gray-900 font-black text-xs md:text-sm px-5 py-2 rounded-full shadow-lg hover:bg-gray-100 transition-colors active:scale-95"
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetUrl = (slide.ctaUrl || '#catalogo').trim();
+                console.log('[HeroDynamic] CTA Log:', { targetUrl, ctaText: slide.ctaText });
+                
+                if (onCtaClick) {
+                  onCtaClick(targetUrl);
+                } else if (targetUrl.startsWith('http')) {
+                  window.open(targetUrl, '_blank');
+                } else {
+                  window.location.href = targetUrl;
+                }
+              }}
+              className="inline-block bg-white text-gray-900 font-black text-xs md:text-sm px-5 py-2 rounded-full shadow-lg hover:bg-gray-100 transition-colors active:scale-95 z-50 relative pointer-events-auto"
             >
               {slide.ctaText}
-            </a>
+            </button>
           )}
         </div>
       )}

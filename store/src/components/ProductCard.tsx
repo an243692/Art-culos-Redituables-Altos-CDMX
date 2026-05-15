@@ -127,40 +127,39 @@ export const ProductCard = memo(function ProductCard({ product, onAdd, onShowVar
           {hasVariants ? (
             <button
               onClick={handleAddClick}
-              className="w-full py-2 rounded-[4px] text-[11px] font-black uppercase tracking-wider text-white hover:brightness-110 transition-all active:scale-[0.97]"
-              style={{ background: 'var(--bw-teal)' }}
+              className="w-full py-2 rounded-lg text-[11px] font-black uppercase tracking-wider text-white bg-[#0a0a0a] shadow-md hover:bg-black hover:shadow-lg transition-all active:scale-[0.97]"
             >
               Ver detalle
             </button>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 mt-auto">
               {/* Qty selector */}
-              <div className="flex items-center justify-between border border-gray-200 rounded-full h-[34px] bg-white px-3 w-full group-hover:border-gray-300 transition-colors">
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} type="button" className="text-[#1a1a1a] text-base font-bold px-1.5 py-1 leading-none hover:text-[var(--bw-orange)] rounded-full transition-colors">−</button>
+              <div className="flex items-center justify-between border border-gray-200 rounded-lg h-[34px] bg-white px-3 w-full group-hover:border-gray-300 transition-colors mb-0.5">
+                <button onClick={(e) => { e.stopPropagation(); setQty(q => Math.max(1, q - 1)); }} type="button" className="text-[#1a1a1a] text-lg font-bold px-2 py-1 leading-none hover:text-[var(--bw-orange)] transition-colors">−</button>
                 <input
                   type="number" min="1" value={qty}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={e => setQty(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-10 text-center text-[13px] font-bold text-[#1a1a1a] outline-none border-none hide-arrows bg-transparent"
+                  className="w-10 text-center text-[14px] font-black text-[#1a1a1a] outline-none border-none hide-arrows bg-transparent"
                 />
-                <button onClick={() => setQty(q => q + 1)} type="button" className="text-[#1a1a1a] text-base font-bold px-1.5 py-1 leading-none hover:text-[var(--bw-orange)] rounded-full transition-colors">+</button>
+                <button onClick={(e) => { e.stopPropagation(); setQty(q => q + 1); }} type="button" className="text-[#1a1a1a] text-lg font-bold px-2 py-1 leading-none hover:text-[var(--bw-orange)] transition-colors">+</button>
               </div>
               {/* Add to cart button — full width */}
               <button
                 disabled={isSinStock}
                 onClick={handleAddClick}
-                className={`w-full h-[36px] rounded-full flex items-center justify-center gap-2 text-white text-[11px] font-black uppercase tracking-wide transition-all active:scale-[0.96] ${
+                className={`w-full h-[38px] rounded-lg flex items-center justify-center gap-2 text-white text-[12px] font-black uppercase tracking-widest transition-all active:scale-[0.96] ${
                   isSinStock
-                    ? 'bg-gray-200 text-gray-400 shadow-none cursor-not-allowed'
+                    ? 'bg-gray-100 text-gray-400 shadow-none cursor-not-allowed'
                     : added
-                      ? 'bg-green-500 shadow-[0_4px_12px_rgba(34,197,94,0.35)]'
-                      : 'shadow-[0_4px_12px_rgba(255,127,0,0.3)] hover:brightness-110'
+                      ? 'bg-green-500 shadow-lg'
+                      : 'bg-[#0a0a0a] shadow-md hover:bg-black hover:shadow-lg'
                 }`}
-                style={!isSinStock && !added ? { background: 'var(--bw-orange)' } : undefined}
                 title="Agregar al pedido"
               >
                 {added
-                  ? <><Check size={14} strokeWidth={3} /> Añadido</>
-                  : <><ShoppingCart size={14} strokeWidth={2} /> Agregar</>
+                  ? <><Check size={16} strokeWidth={3} /> Añadido</>
+                  : <><ShoppingCart size={16} strokeWidth={3} /> Agregar</>
                 }
               </button>
             </div>

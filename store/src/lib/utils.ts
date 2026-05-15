@@ -1,6 +1,6 @@
-// Tamaños estándar — SIEMPRE usar estos 4 valores para maximizar el cache hit
-// Si cambias el tamaño, el navegador lo trata como URL nueva y hace otra request
-const STD_WIDTHS = [120, 400, 800, 1200];
+// Tamaños estándar — SIEMPRE usar estos valores para maximizar el cache hit
+// Se añadieron tamaños grandes (1920, 2560, 3840) para evitar pixelado en pantallas retina o monitores grandes
+const STD_WIDTHS = [120, 400, 800, 1200, 1920, 2560, 3840];
 
 function nearestWidth(w: number): number {
     return STD_WIDTHS.reduce((prev, curr) =>
@@ -16,10 +16,10 @@ export function cldOpt(url: string | undefined, maxW: number): string {
     // Ejemplo: 80 → 120, 200 → 120 o 400, 300 → 400, 600 → 400, etc.
     const w = nearestWidth(maxW);
 
-    // Transformaciones: f_auto (webp/avif), q_auto:eco (menor peso sin cambio visual visible)
+    // Transformaciones: f_auto (webp/avif), q_auto:best (calidad alta para no pixelar)
     // c_limit: nunca agranda imágenes menores al tamaño pedido
     // SIN dpr_auto — ese parámetro genera URLs distintas por cada pantalla y rompe el caché
-    const transforms = `f_auto,q_auto:eco,w_${w},c_limit`;
+    const transforms = `f_auto,q_auto:best,w_${w},c_limit`;
 
     const uploadIdx = url.indexOf('/upload/');
     if (uploadIdx === -1) return url;

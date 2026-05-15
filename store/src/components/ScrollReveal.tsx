@@ -25,6 +25,7 @@ const variants = {
   scaleUp: {
     hidden: { opacity: 0, transform: 'scale(0.85)' },
     visible: { opacity: 1, transform: 'scale(1)' },
+  
   },
   slideRight: {
     hidden: { opacity: 0, transform: 'translateX(-30px)' },

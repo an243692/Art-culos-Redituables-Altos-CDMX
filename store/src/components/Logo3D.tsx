@@ -213,4 +213,3 @@ export function Logo3D({ logoUrl }: { logoUrl: string }) {
     </motion.div>
   );
 }
-
